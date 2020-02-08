@@ -3,13 +3,13 @@
 // license that can be found in the LICENSE file.
 #![macro_use]
 
-use crate::vector::ops::Copy;
-use crate::Matrix;
-use num::traits::NumCast;
 use std::fmt;
 use std::iter::repeat;
 use std::ops::Index;
 use std::slice;
+use num::traits::NumCast;
+use Matrix;
+use vector::ops::Copy;
 
 #[derive(Debug, PartialEq)]
 pub struct Mat<T> {
@@ -22,9 +22,7 @@ impl<T> Mat<T> {
     pub fn new(n: usize, m: usize) -> Mat<T> {
         let len = n * m;
         let mut data = Vec::with_capacity(len);
-        unsafe {
-            data.set_len(len);
-        }
+        unsafe { data.set_len(len); }
 
         Mat {
             rows: n,
@@ -33,18 +31,10 @@ impl<T> Mat<T> {
         }
     }
 
-    pub fn rows(&self) -> usize {
-        self.rows
-    }
-    pub fn cols(&self) -> usize {
-        self.cols
-    }
-    pub unsafe fn set_rows(&mut self, n: usize) {
-        self.rows = n;
-    }
-    pub unsafe fn set_cols(&mut self, n: usize) {
-        self.cols = n;
-    }
+    pub fn rows(&self) -> usize { self.rows }
+    pub fn cols(&self) -> usize { self.cols }
+    pub unsafe fn set_rows(&mut self, n: usize) { self.rows = n; }
+    pub unsafe fn set_cols(&mut self, n: usize) { self.cols = n; }
 
     pub unsafe fn push(&mut self, val: T) {
         self.data.push(val);
@@ -95,13 +85,13 @@ impl<T: fmt::Display> fmt::Display for Mat<T> {
 }
 
 impl<T> Matrix<T> for Mat<T> {
-    fn rows(&self) -> i32 {
-        let n: Option<i32> = NumCast::from(self.rows);
+    fn rows(&self) -> u32 {
+        let n: Option<u32> = NumCast::from(self.rows);
         n.unwrap()
     }
 
-    fn cols(&self) -> i32 {
-        let n: Option<i32> = NumCast::from(self.cols);
+    fn cols(&self) -> u32 {
+        let n: Option<u32> = NumCast::from(self.cols);
         n.unwrap()
     }
 
@@ -115,8 +105,7 @@ impl<T> Matrix<T> for Mat<T> {
 }
 
 impl<'a, T> From<&'a dyn Matrix<T>> for Mat<T>
-where
-    T: Copy,
+    where T: Copy
 {
     fn from(a: &dyn Matrix<T>) -> Mat<T> {
         let n = a.rows() as usize;
@@ -128,9 +117,7 @@ where
             cols: m,
             data: Vec::with_capacity(len),
         };
-        unsafe {
-            result.data.set_len(len);
-        }
+        unsafe { result.data.set_len(len); }
 
         Copy::copy_mat(a, &mut result);
         result
@@ -166,7 +153,7 @@ macro_rules! mat(
 
 #[cfg(test)]
 mod tests {
-    use crate::math::Mat;
+    use math::Mat;
 
     #[test]
     fn index() {

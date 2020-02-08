@@ -3,10 +3,9 @@
 // license that can be found in the LICENSE file.
 
 //! Vector operations.
-use crate::vector::ops::{Asum, Axpy, Copy, Dot, Iamax, Nrm2, Scal};
-use libc::c_int;
 use num::traits::NumCast;
-use num_complex::{Complex32, Complex64};
+use num::complex::{Complex32, Complex64};
+use vector::ops::{Copy, Axpy, Scal, Dot, Nrm2, Asum, Iamax};
 
 pub mod ll;
 pub mod ops;
@@ -15,11 +14,9 @@ pub mod ops;
 pub trait Vector<T> {
     /// The stride within the vector. For example, if `inc` returns 7, every
     /// 7th element is used. Defaults to 1.
-    fn inc(&self) -> c_int {
-        1
-    }
+    fn inc(&self) -> u32 { 1 }
     /// The number of elements in the vector.
-    fn len(&self) -> c_int;
+    fn len(&self) -> u32;
     /// An unsafe pointer to a contiguous block of memory.
     fn as_ptr(&self) -> *const T;
     /// An unsafe mutable pointer to a contiguous block of memory.
@@ -27,16 +24,13 @@ pub trait Vector<T> {
 }
 
 impl<'a, T> Into<Vec<T>> for &'a dyn Vector<T>
-where
-    T: Copy,
-{
+    where T: Copy {
+
     fn into(self) -> Vec<T> {
         let n = self.len() as usize;
 
         let mut x = Vec::with_capacity(n);
-        unsafe {
-            x.set_len(n);
-        }
+        unsafe { x.set_len(n); }
         Copy::copy(self, &mut x);
 
         x
@@ -44,9 +38,8 @@ where
 }
 
 pub trait VectorOperations<T>: Sized + Vector<T>
-where
-    T: Copy + Axpy + Scal + Dot + Nrm2 + Asum + Iamax,
-{
+    where T: Copy + Axpy + Scal + Dot + Nrm2 + Asum + Iamax {
+
     #[inline]
     fn update(&mut self, alpha: &T, x: &dyn Vector<T>) -> &mut Self {
         Axpy::axpy(alpha, x, self);
@@ -81,9 +74,10 @@ where
 }
 
 impl<T> Vector<T> for Vec<T> {
+
     #[inline]
-    fn len(&self) -> c_int {
-        let l: Option<c_int> = NumCast::from(Vec::len(self));
+    fn len(&self) -> u32 {
+        let l: Option<u32> = NumCast::from(Vec::len(self));
         match l {
             Some(l) => l,
             None => panic!(),
@@ -91,20 +85,17 @@ impl<T> Vector<T> for Vec<T> {
     }
 
     #[inline]
-    fn as_ptr(&self) -> *const T {
-        self[..].as_ptr()
-    }
+    fn as_ptr(&self) -> *const T { self[..].as_ptr() }
 
     #[inline]
-    fn as_mut_ptr(&mut self) -> *mut T {
-        (&mut self[..]).as_mut_ptr()
-    }
+    fn as_mut_ptr(&mut self) -> *mut T { (&mut self[..]).as_mut_ptr() }
 }
 
 impl<T> Vector<T> for [T] {
+
     #[inline]
-    fn len(&self) -> c_int {
-        let l: Option<c_int> = NumCast::from(<[T]>::len(self));
+    fn len(&self) -> u32 {
+        let l: Option<u32> = NumCast::from(<[T]>::len(self));
         match l {
             Some(l) => l,
             None => panic!(),
@@ -112,14 +103,10 @@ impl<T> Vector<T> for [T] {
     }
 
     #[inline]
-    fn as_ptr(&self) -> *const T {
-        <[T]>::as_ptr(self)
-    }
+    fn as_ptr(&self) -> *const T { <[T]>::as_ptr(self) }
 
     #[inline]
-    fn as_mut_ptr(&mut self) -> *mut T {
-        <[T]>::as_mut_ptr(self)
-    }
+    fn as_mut_ptr(&mut self) -> *mut T { <[T]>::as_mut_ptr(self) }
 }
 
 macro_rules! operations_impl(
